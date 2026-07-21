@@ -3,28 +3,14 @@
 package ui
 
 import (
-	"os/exec"
-	"runtime"
-
 	"github.com/Peritius/Nimbus/internal/config"
-	"github.com/Peritius/Nimbus/internal/forecast"
+	"github.com/Peritius/Nimbus/internal/webui"
 )
 
-func ShowSettings(cfg *config.Config) *config.Config {
-	path, err := config.ConfigPath()
-	if err != nil {
-		return nil
-	}
-	switch runtime.GOOS {
-	case "darwin":
-		exec.Command("open", "-t", path).Start()
-	default:
-		exec.Command("xdg-open", path).Start()
-	}
-	return nil
+func ShowSettings(cfg *config.Config, onFontChange func(int)) *config.Config {
+	return webui.ShowSettings(cfg)
 }
 
-func ShowForecast(lat, lon float64, units, lang, theme string) {
-	_ = theme
-	forecast.Show(lat, lon, units, lang)
+func ShowForecast(lat, lon float64, units, lang, theme, windUnit string) {
+	webui.ShowForecast(lat, lon, units, lang, windUnit)
 }
