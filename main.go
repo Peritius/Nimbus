@@ -1,10 +1,10 @@
-package main
+﻿package main
 
 import (
 	"log"
 
-	"github.com/Lrt/Nimbus/internal/config"
-	"github.com/Lrt/Nimbus/internal/tray"
+	"github.com/Peritius/Nimbus/internal/config"
+	"github.com/Peritius/Nimbus/internal/tray"
 )
 
 func main() {

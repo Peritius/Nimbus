@@ -1,13 +1,13 @@
-package tray
+﻿package tray
 
 import (
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/Lrt/Nimbus/internal/config"
-	"github.com/Lrt/Nimbus/internal/icons"
-	"github.com/Lrt/Nimbus/internal/weather"
+	"github.com/Peritius/Nimbus/internal/config"
+	"github.com/Peritius/Nimbus/internal/icons"
+	"github.com/Peritius/Nimbus/internal/weather"
 	"github.com/getlantern/systray"
 )
 
@@ -65,7 +65,7 @@ func (a *app) handleMenu() {
 			_ = a.cfg.Save()
 			a.fetchAndUpdate()
 		case <-a.mAbout.ClickedCh:
-			systray.SetTooltip("Nimbus — Weather tray app | github.com/Lrt/Nimbus")
+			systray.SetTooltip("Nimbus — Weather tray app | github.com/Peritius/Nimbus")
 		case <-a.mQuit.ClickedCh:
 			systray.Quit()
 			return
