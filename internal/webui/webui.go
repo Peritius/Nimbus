@@ -11,7 +11,6 @@ import (
 	"runtime"
 	"strconv"
 
-	"github.com/Peritius/Nimbus/internal/build"
 	"github.com/Peritius/Nimbus/internal/config"
 	"github.com/Peritius/Nimbus/internal/i18n"
 	"github.com/Peritius/Nimbus/internal/weather"
@@ -28,6 +27,9 @@ var aboutContent string
 
 //go:embed favicon.png
 var faviconBytes []byte
+
+//go:embed about_logo.png
+var aboutLogoBytes []byte
 
 var (
 	settingsTmpl = template.Must(template.New("settings").Parse(settingsContent))
@@ -106,11 +108,12 @@ func ShowAbout() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/icon", faviconHandler)
+	mux.HandleFunc("/logo", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "image/png")
+		w.Write(aboutLogoBytes)
+	})
 	mux.HandleFunc("/about", func(w http.ResponseWriter, r *http.Request) {
-		aboutTmpl.Execute(w, map[string]string{
-			"Version": build.Version,
-			"Date":    build.Date,
-		})
+		aboutTmpl.Execute(w, nil)
 	})
 	http.Serve(l, mux)
 }
