@@ -157,7 +157,7 @@ func showForecast(req gui.Forecast) {
 				}
 			}
 			if cachedDaily == nil {
-				gui.Current().Error("Nimbus", l.NetworkError())
+				gui.Current().Error(appName, l.NetworkError())
 				return
 			}
 		}
