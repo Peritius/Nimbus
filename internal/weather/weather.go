@@ -168,33 +168,6 @@ func FetchAll(lat, lon float64) (*WeatherData, []DailyForecast, error) {
 	return current, daily, nil
 }
 
-func (w *WeatherData) Emoji() string {
-	switch {
-	case w.WeatherCode == 0:
-		return "\u2600\ufe0f"
-	case w.WeatherCode >= 1 && w.WeatherCode <= 2:
-		return "\u26c5"
-	case w.WeatherCode == 3:
-		return "\u2601\ufe0f"
-	case w.WeatherCode == 45 || w.WeatherCode == 48:
-		return "\U0001f32b\ufe0f"
-	case w.WeatherCode >= 51 && w.WeatherCode <= 55:
-		return "\U0001f326\ufe0f"
-	case w.WeatherCode >= 61 && w.WeatherCode <= 65:
-		return "\U0001f327\ufe0f"
-	case w.WeatherCode >= 71 && w.WeatherCode <= 77:
-		return "\u2744\ufe0f"
-	case w.WeatherCode >= 80 && w.WeatherCode <= 82:
-		return "\U0001f327\ufe0f"
-	case w.WeatherCode >= 85 && w.WeatherCode <= 86:
-		return "\U0001f328\ufe0f"
-	case w.WeatherCode >= 95 && w.WeatherCode <= 99:
-		return "\u26c8\ufe0f"
-	default:
-		return "\U0001f321\ufe0f"
-	}
-}
-
 type GeoResult struct {
 	Name      string  `json:"name"`
 	Latitude  float64 `json:"latitude"`
