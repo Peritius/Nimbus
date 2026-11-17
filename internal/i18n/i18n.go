@@ -577,3 +577,12 @@ func (l Lang) NetworkError() string {
 	}
 	return "No internet connection or connection is unstable"
 }
+
+// NoData is the tray tooltip while the icon shows a dash, i.e. when there is no
+// fresh reading to describe.
+func (l Lang) NoData() string {
+	if l == UK {
+		return "Немає даних про погоду"
+	}
+	return "No weather data"
+}

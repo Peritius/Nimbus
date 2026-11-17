@@ -12,8 +12,7 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
-func bgCol(temp float64) color.RGBA {
-	_ = temp
+func bgCol() color.RGBA {
 	return color.RGBA{R: 50, G: 50, B: 50, A: 220}
 }
 
@@ -33,17 +32,29 @@ func GenerateScale(temp float64, code int, theme string, fontScale int) []byte {
 	return MakeIcon(temp, code, theme, fontScale)
 }
 
+// Placeholder is the icon for "no reading": a dash where the temperature would
+// be. It exists because the tray needs an icon before the first fetch lands, and
+// when the last reading has gone stale there is nothing truthful to draw - a
+// made-up number is worse than a dash, which is what the tray used to paint.
+func Placeholder(fontScale int) []byte {
+	return encodeIcon(
+		renderText("-", 32, fontScale),
+		renderText("-", 64, fontScale),
+	)
+}
+
 func MakeIcon(temp float64, code int, theme string, fontScale int) []byte {
 	_ = code
 	_ = theme
-	s32 := render(temp, 32, fontScale)
-	s64 := render(temp, 64, fontScale)
+	text := tempStr(temp)
+	s32 := renderText(text, 32, fontScale)
+	s64 := renderText(text, 64, fontScale)
 	return encodeIcon(s32, s64)
 }
 
-func render(temp float64, sz int, fontScale int) *image.RGBA {
+func renderText(text string, sz int, fontScale int) *image.RGBA {
 	img := image.NewRGBA(image.Rect(0, 0, sz, sz))
-	bg := bgCol(temp)
+	bg := bgCol()
 
 	for y := 0; y < sz; y++ {
 		for x := 0; x < sz; x++ {
@@ -58,13 +69,12 @@ func render(temp float64, sz int, fontScale int) *image.RGBA {
 		}
 	}
 
-	drawTempFit(img, temp, sz, fontScale)
+	drawTempFit(img, text, sz, fontScale)
 
 	return img
 }
 
-func drawTempFit(img *image.RGBA, temp float64, sz int, fontScale int) {
-	text := tempStr(temp)
+func drawTempFit(img *image.RGBA, text string, sz int, fontScale int) {
 	face := basicfont.Face7x13
 
 	adv := font.MeasureString(face, text)

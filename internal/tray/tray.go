@@ -2,7 +2,6 @@ package tray
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -61,7 +60,7 @@ func newApp(cfg *config.Config) *app {
 }
 
 func (a *app) ready() {
-	icon := icons.GenerateScale(20, 0, "auto", a.cfg.FontScale)
+	icon := icons.Placeholder(a.cfg.FontScale)
 	if icon != nil {
 		systray.SetIcon(icon)
 	}
@@ -114,8 +113,12 @@ func (a *app) fetchAndUpdate() {
 	current, _, err := weather.FetchAll(a.cfg.Latitude, a.cfg.Longitude)
 	if err != nil {
 		log.Printf("Weather fetch error: %v", err)
-		systray.SetTooltip(fmt.Sprintf("Nimbus — error: %v", err))
 		a.fetchErrors++
+		// Not "no data" yet, necessarily: a failed request inside the update
+		// interval still leaves the previous reading fresh enough to show, and
+		// blanking it there would make every hiccup flash a dash. updateIcon
+		// owns the freshness decision.
+		a.updateIcon(a.cfg.FontScale)
 		if a.fetchErrors >= 10 {
 			l := i18n.ParseLang(a.cfg.Language)
 			gui.Current().Error("Nimbus", l.NetworkError())
@@ -155,7 +158,11 @@ func (a *app) stopRefreshLoop() {
 }
 
 func (a *app) updateIcon(fontScale int) {
-	if a.lastData == nil {
+	// One interval is the freshness window: a reading younger than the refresh
+	// period is the current weather by the app's own definition, so a failed
+	// refresh must leave it alone. Past it there is nothing trustworthy to show.
+	if a.lastData == nil || time.Since(a.lastData.FetchedAt) > a.cfg.Interval() {
+		a.showNoData(fontScale)
 		return
 	}
 	data := a.lastData
@@ -175,6 +182,16 @@ func (a *app) updateIcon(fontScale int) {
 		int(data.Humidity), data.WindSpeed, data.SurfacePressure,
 		a.cfg.Units, a.cfg.PressureUnit, a.cfg.WindUnit)
 	systray.SetTooltip(detail)
+}
+
+// showNoData paints the dash and says why. This is both the pre-fetch state at
+// startup and the state a stale reading decays into once a refresh has failed
+// for longer than one interval.
+func (a *app) showNoData(fontScale int) {
+	if icon := icons.Placeholder(fontScale); icon != nil {
+		systray.SetIcon(icon)
+	}
+	systray.SetTooltip("Nimbus — " + a.lang.NoData())
 }
 
 func (a *app) showForecast() {
