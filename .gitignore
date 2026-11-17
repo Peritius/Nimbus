@@ -13,6 +13,7 @@ dist/debian/nimbus-qt/
 dist/*.deb
 dist/*.rpm
 dist/rpm/BUILD/
+dist/rpm/SOURCES/
 dist/rpm/RPMS/
 dist/rpm/SRPMS/
 dist/rpm/nimbus-*-build.spec

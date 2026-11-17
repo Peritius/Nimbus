@@ -168,14 +168,20 @@ install-deb-gtk: deb-gtk
 install-deb-qt: deb-qt
 	sudo apt install ./dist/nimbus-qt_$(VERSION)-1_amd64.deb
 
-# The spec installs from build-rpm/, so the files have to be put there first.
-# That copy used to live only in the release workflow, which meant `make rpm`
-# alone produced a package with no binary in it.
+# The spec installs from %{_sourcedir}, so the files have to be staged there
+# first. That copy used to live only in the release workflow, which meant `make
+# rpm` alone produced a package with no binary in it.
+#
+# It goes to SOURCES rather than BUILD. RPM 4.20's %mkbuilddir creates
+# BUILD/<name>-<version>-<release>-build and runs %prep inside it, so a payload
+# dropped into BUILD is no longer reachable from %install by a relative path - a
+# detached build landed in one directory and %install looked in another. The
+# sourcedir is the one directory whose meaning did not change.
 rpm-gtk: gtk
 rpm-qt: qt
 rpm-%:
-	mkdir -p dist/rpm/BUILD/build-rpm dist/rpm/RPMS dist/rpm/SRPMS
-	cp $(BUILD_DIR)/nimbus-$* nimbus1.png LICENSE THIRD-PARTY-LICENSES dist/rpm/BUILD/build-rpm/
+	mkdir -p dist/rpm/SOURCES dist/rpm/RPMS dist/rpm/SRPMS
+	cp $(BUILD_DIR)/nimbus-$* nimbus1.png LICENSE THIRD-PARTY-LICENSES dist/rpm/SOURCES/
 	sed 's/^Version:.*/Version: $(VERSION)/' dist/rpm/nimbus-$*.spec > dist/rpm/nimbus-$*-build.spec
 	rpmbuild -bb --define "_topdir $(PWD)/dist/rpm" dist/rpm/nimbus-$*-build.spec
 

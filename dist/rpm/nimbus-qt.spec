@@ -27,14 +27,16 @@ all. For a GTK desktop install nimbus-gtk instead; the two can be
 installed side by side and share one configuration file.
 
 %prep
-mkdir -p build-rpm
+# The binary, icons and licence files are staged in %{_sourcedir} by the
+# Makefile. RPM 4.20 runs %prep inside BUILD/<name>-<version>-<release>-build,
+# so nothing here can assume the payload sits in the current directory.
 
 %build
 echo "Binary built separately in workflow"
 
 %install
 mkdir -p %{buildroot}%{_bindir}
-install -m 755 build-rpm/nimbus-qt %{buildroot}%{_bindir}/nimbus-qt
+install -m 755 %{_sourcedir}/nimbus-qt %{buildroot}%{_bindir}/nimbus-qt
 
 mkdir -p %{buildroot}%{_datadir}/applications
 cat > %{buildroot}%{_datadir}/applications/nimbus-qt.desktop << EOF
@@ -50,8 +52,8 @@ Icon=nimbus-qt
 EOF
 
 mkdir -p %{buildroot}%{_datadir}/pixmaps
-install -m 644 build-rpm/nimbus1.png %{buildroot}%{_datadir}/pixmaps/nimbus-qt.png
-install -m 644 build-rpm/LICENSE build-rpm/THIRD-PARTY-LICENSES .
+install -m 644 %{_sourcedir}/nimbus1.png %{buildroot}%{_datadir}/pixmaps/nimbus-qt.png
+install -m 644 %{_sourcedir}/LICENSE %{_sourcedir}/THIRD-PARTY-LICENSES .
 
 %files
 %license LICENSE
