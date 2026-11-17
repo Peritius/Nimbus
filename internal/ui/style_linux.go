@@ -2,15 +2,22 @@
 
 package ui
 
+import (
+	"strconv"
+
+	"github.com/Peritius/Nimbus/internal/panelspec"
+)
+
 // forecastCSS is the application stylesheet for the forecast panel.
 //
 // It names no colour anywhere, and that is the design rather than an omission:
 // the panel is an ordinary application window, so the desktop theme paints its
 // background, its labels and its separators, and all this sheet does is undo what
 // a theme states on the nodes a table is built from and set the two sizes and the
-// one thickness that are ours. Measured under BlackMATE: opaque grey window,
-// legible near-white labels, and separators the theme paints a shade darker than
-// the background.
+// two thicknesses that are ours. Every number in it is interpolated from
+// internal/panelspec, the one place all three renderers read the layout from.
+// Measured under BlackMATE: opaque grey window, legible near-white labels, and
+// separators the theme paints a shade darker than the background.
 //
 // The rules that shape what is left, all learned by measurement against that
 // theme and the Marco window manager:
@@ -37,7 +44,7 @@ package ui
 // buttons under #nimbus-forecast are the ones a client-side-decorating GTK draws
 // into the title bar, and stripping their padding and background would deface the
 // very frame the panel asks for.
-const forecastCSS = `
+var forecastCSS = `
 /* Reset: undo what the desktop theme states on these nodes. */
 #nimbus-forecast,
 #nimbus-forecast box,
@@ -60,25 +67,25 @@ const forecastCSS = `
   padding: 0;
   margin: 0;
   min-width: 0;
-  min-height: 1px;
+  min-height: ` + strconv.Itoa(panelspec.HairlinePx) + `px;
   border: none;
   background-image: none;
   box-shadow: none;
 }
 
 #nimbus-forecast .page {
-  padding: 4px 14px 14px 14px;   /* pagePadTop, then pagePad */
+  padding: ` + strconv.Itoa(panelspec.PagePadTop) + `px ` + strconv.Itoa(panelspec.PagePad) + `px ` + strconv.Itoa(panelspec.PagePad) + `px ` + strconv.Itoa(panelspec.PagePad) + `px;
 }
 
 /* Table type. One size for the whole table: a header row that shouts is a
    card-layout habit, and weight alone separates it from the data. */
 #nimbus-forecast .thead {
-  font-size: 11pt;     /* theadPt */
+  font-size: ` + strconv.Itoa(panelspec.TheadPt) + `pt;
   font-weight: 600;
 }
 
 #nimbus-forecast .cell {
-  font-size: 11pt;     /* cellPt */
+  font-size: ` + strconv.Itoa(panelspec.CellPt) + `pt;
 }
 
 /* The only rule here that is not a reset, and it names no colour on purpose.
@@ -88,6 +95,6 @@ const forecastCSS = `
    visible at all. Thickness restores the hierarchy while the colour stays the
    theme's. The Win32 backend restores it with two alphas of COLOR_3DSHADOW. */
 #nimbus-forecast.system .rule {
-  min-height: 2px;
+  min-height: ` + strconv.Itoa(panelspec.RulePx) + `px;
 }
 `

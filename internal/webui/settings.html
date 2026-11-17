@@ -4,35 +4,157 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <link rel="icon" href="/icon" type="image/png">
-<title>Nimbus</title>
+<title>Nimbus — Settings</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--bg:#f0f0f0;--fg:#111;--card:#fff;--border:#ccc;--legend:#666;--label:#555;--h1:#555;--val:#888;--btn-bg:#fff}
+:root{
+  --bg:#f8f9fa;
+  --fg:#1a1a1a;
+  --card:#ffffff;
+  --border:#dee2e6;
+  --legend:#495057;
+  --label:#495057;
+  --h1:#212529;
+  --val:#6c757d;
+  --btn-bg:#ffffff;
+  --primary:#2b6cf0;
+  --primary-hover:#1a5cd0;
+  --shadow:0 1px 3px rgba(0,0,0,0.05);
+}
 {{if eq .iconTheme "dark"}}
-:root{--bg:#1c1c1e;--fg:#eee;--card:#2c2c2e;--border:#444;--legend:#aaa;--label:#aaa;--h1:#aaa;--val:#888;--btn-bg:#333}
+:root{
+  --bg:#121212;
+  --fg:#e0e0e0;
+  --card:#1e1e1e;
+  --border:#333333;
+  --legend:#a0a0a0;
+  --label:#b0b0b0;
+  --h1:#f0f0f0;
+  --val:#9e9e9e;
+  --btn-bg:#2c2c2c;
+  --primary:#3b78ff;
+  --primary-hover:#2563eb;
+  --shadow:0 1px 3px rgba(0,0,0,0.2);
+}
 {{else if eq .iconTheme "auto"}}
-@media(prefers-color-scheme:dark){:root{--bg:#1c1c1e;--fg:#eee;--card:#2c2c2e;--border:#444;--legend:#aaa;--label:#aaa;--h1:#aaa;--val:#888;--btn-bg:#333}}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#121212;
+    --fg:#e0e0e0;
+    --card:#1e1e1e;
+    --border:#333333;
+    --legend:#a0a0a0;
+    --label:#b0b0b0;
+    --h1:#f0f0f0;
+    --val:#9e9e9e;
+    --btn-bg:#2c2c2c;
+    --primary:#3b78ff;
+    --primary-hover:#2563eb;
+    --shadow:0 1px 3px rgba(0,0,0,0.2);
+  }
+}
 {{end}}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--fg);padding:20px;max-width:480px;margin:0 auto}
-h1{text-align:center;font-size:18px;margin-bottom:20px;color:var(--h1)}
-fieldset{border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:14px;background:var(--card)}
-legend{font-size:14px;font-weight:600;color:var(--legend);padding:0 6px}
-.row{display:flex;align-items:center;margin-bottom:8px;gap:8px}
+body{
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg);
+  color:var(--fg);
+  padding:24px;
+  max-width:520px;
+  margin:0 auto;
+}
+h1{
+  text-align:center;
+  font-size:20px;
+  font-weight:600;
+  margin-bottom:24px;
+  color:var(--h1);
+  letter-spacing:-0.2px;
+}
+fieldset{
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px;
+  margin-bottom:16px;
+  background:var(--card);
+  box-shadow:var(--shadow);
+}
+legend{
+  font-size:13px;
+  font-weight:600;
+  color:var(--legend);
+  padding:0 6px;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+.row{
+  display:flex;
+  align-items:center;
+  margin-bottom:10px;
+  gap:10px;
+}
 .row:last-child{margin-bottom:0}
-label{flex:0 0 100px;font-size:13px;color:var(--label)}
-input[type=text],input[type=number],select{flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:13px;background:var(--card);color:var(--fg)}
-input[type=range]{flex:1}
-.radio-group{display:flex;gap:6px;flex-wrap:wrap}
-.radio-group label{flex:0;font-size:13px}
-.btns{display:flex;gap:10px;justify-content:center;margin-top:10px}
-.btns button{padding:8px 24px;border:none;border-radius:6px;font-size:14px;cursor:pointer}
-.btn-save{background:#2b6cf0;color:#fff}
-.btn-cancel{background:#888;color:#fff}
-.btn-del{background:#c0392b;color:#fff}
-.btn-save:hover{background:#1a5cd0}
-.btn-cancel:hover{background:#666}
-.btn-del:hover{background:#a93226}
-.val{font-size:13px;color:var(--val);width:36px;text-align:right}
+label{
+  flex:0 0 110px;
+  font-size:13px;
+  color:var(--label);
+  font-weight:500;
+}
+input[type=text],input[type=number],select{
+  flex:1;
+  padding:8px 10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  font-size:14px;
+  background:var(--card);
+  color:var(--fg);
+  outline:none;
+  transition:border-color 0.2s;
+}
+input[type=text]:focus,input[type=number]:focus,select:focus{
+  border-color:var(--primary);
+}
+input[type=range]{flex:1;accent-color:var(--primary)}
+.radio-group{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.radio-group label{
+  flex:0;
+  font-size:14px;
+  font-weight:normal;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+.btns{
+  display:flex;
+  gap:12px;
+  justify-content:center;
+  margin-top:24px;
+}
+.btns button{
+  padding:10px 28px;
+  border:none;
+  border-radius:8px;
+  font-size:14px;
+  font-weight:500;
+  cursor:pointer;
+  transition:background 0.2s;
+}
+.btn-save{background:var(--primary);color:#fff}
+.btn-save:hover{background:var(--primary-hover)}
+.btn-cancel{background:var(--border);color:var(--fg)}
+.btn-cancel:hover{opacity:0.8}
+.val{
+  font-size:13px;
+  color:var(--val);
+  width:40px;
+  text-align:right;
+  font-weight:500;
+}
 </style>
 </head>
 <body>
@@ -40,12 +162,12 @@ input[type=range]{flex:1}
 <form action="/save" method="post">
 <fieldset>
 <legend>{{if eq .t.String "uk"}}Місто{{else}}City{{end}}</legend>
-<div class="row" style="gap:4px">
+<div class="row" style="gap:6px">
 <label>{{if eq .t.String "uk"}}Назва{{else}}Name{{end}}</label>
 <input type="text" name="city_name" id="cityInput" value="{{.cityName}}" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();searchCity()}">
-<button type="button" id="searchBtn" onclick="searchCity()" style="padding:6px 12px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;font-size:13px">{{if eq .t.String "uk"}}Пошук{{else}}Search{{end}}</button>
+<button type="button" id="searchBtn" onclick="searchCity()" style="padding:8px 14px;border:1px solid var(--border);border-radius:8px;background:var(--btn-bg);color:var(--fg);cursor:pointer;font-size:13px;font-weight:500">{{if eq .t.String "uk"}}Пошук{{else}}Search{{end}}</button>
 </div>
-<div id="results" style="max-height:150px;overflow-y:auto;margin-bottom:8px;display:none"></div>
+<div id="results" style="max-height:160px;overflow-y:auto;margin-top:8px;margin-bottom:8px;display:none;border:1px solid var(--border);border-radius:8px"></div>
 <div class="row"><label>{{if eq .t.String "uk"}}Широта{{else}}Latitude{{end}}</label><input type="text" name="latitude" id="latInput" value="{{.latitude}}"></div>
 <div class="row"><label>{{if eq .t.String "uk"}}Довгота{{else}}Longitude{{end}}</label><input type="text" name="longitude" id="lonInput" value="{{.longitude}}"></div>
 </fieldset>
@@ -62,14 +184,14 @@ function searchCity(){
 		el.innerHTML=''
 		if(!data||data.length===0){
 			el.style.display='block'
-			el.innerHTML='<div style="padding:8px;color:#888;font-size:13px">{{if eq .t.String "uk"}}Нічого не знайдено{{else}}No results{{end}}</div>'
+			el.innerHTML='<div style="padding:10px;color:var(--val);font-size:13px">{{if eq .t.String "uk"}}Нічого не знайдено{{else}}No results{{end}}</div>'
 			return
 		}
 		data.forEach(function(c){
 			var d=document.createElement('div')
 			d.textContent=c.name+', '+c.country+' | '+c.latitude.toFixed(4)+', '+c.longitude.toFixed(4)
-			d.style.cssText='padding:6px 8px;cursor:pointer;font-size:13px;border-bottom:1px solid #eee'
-			d.onmouseover=function(){this.style.background='#e8f0fe'}
+			d.style.cssText='padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border)'
+			d.onmouseover=function(){this.style.background='rgba(43,108,240,0.08)'}
 			d.onmouseout=function(){this.style.background=''}
 			d.onclick=function(){
 				document.getElementById('cityInput').value=c.name

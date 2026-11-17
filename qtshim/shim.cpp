@@ -82,21 +82,26 @@ QString utf8(const char *s) { return s ? QString::fromUtf8(s) : QString(); }
 // ---------------------------------------------------------------------------
 // The forecast panel.
 //
-// Every metric below is the one in internal/ui/style_linux.go and in the named
-// constants of forecast_windows.go. The point of three files that agree to the
-// pixel is that the three platforms look like one product.
+// The metrics are handed in by nimbus_qt_forecast_begin, straight from
+// internal/panelspec - the one place all three renderers read them from. Nothing
+// in this file states a layout number of its own; the point of three backends
+// that agree to the pixel is that the three platforms look like one product.
 // ---------------------------------------------------------------------------
 
-const int forecastWidth = 620;
-const int symbolPt = 20;
-const int rowGapY = 6;
-const int colGapX = 18;
-const int pageGapY = 2;
-const int pagePad = 14;
-const int pagePadTop = 4;
-const int theadPt = 11;
-const int cellPt = 11;
-const int panelMargin = 12;
+// Metrics is one panel's layout, as given to begin.
+struct Metrics {
+    int width = 0;
+    int symbolPt = 0;
+    int rowGapY = 0;
+    int colGapX = 0;
+    int pagePad = 0;
+    int pagePadTop = 0;
+    int theadPt = 0;
+    int cellPt = 0;
+    int rulePx = 0;
+    int hairlinePx = 0;
+    int panelMargin = 0;
+};
 
 // placeSettleMs is how long the panel waits before taking the window's position
 // as the baseline a later title-bar drag is measured against. Long enough for a
@@ -129,6 +134,7 @@ struct Day {
 // a panel that was built and never shown cannot leak into the following one.
 struct PanelSpec {
     QString title;
+    Metrics metrics;
     QVector<Column> cols;
     QVector<Day> days;
 } spec;
@@ -159,6 +165,7 @@ private:
     void buildTable(const PanelSpec &s);
 
     unsigned long long id_ = 0;
+    Metrics m_;
     void (*event_)(unsigned long long, long long, long long, long long) = nullptr;
 
     bool closed_ = false;
@@ -176,7 +183,7 @@ Panel *panel = nullptr;
 
 Panel::Panel(const PanelSpec &s, unsigned long long id,
              void (*event)(unsigned long long, long long, long long, long long))
-    : id_(id), event_(event) {
+    : id_(id), m_(s.metrics), event_(event) {
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowTitle(s.title);
 
@@ -191,11 +198,10 @@ Panel::Panel(const PanelSpec &s, unsigned long long id,
     setWindowFlags(Qt::Tool | Qt::WindowStaysOnTopHint);
 
     QVBoxLayout *page = new QVBoxLayout(this);
-    page->setContentsMargins(pagePad, pagePadTop, pagePad, pagePad);
-    page->setSpacing(pageGapY);
+    page->setContentsMargins(m_.pagePad, m_.pagePadTop, m_.pagePad, m_.pagePad);
 
     buildTable(s);
-    setMinimumWidth(forecastWidth);
+    setMinimumWidth(m_.width);
 
     // A press on the body is not the only way the panel gets moved, and the other
     // one never reaches the toolkit at all: the window manager owns the caption and
@@ -253,24 +259,24 @@ QLabel *Panel::cell(const QString &text, int align, int pt, bool bold) {
 // hairlines would otherwise collapse into a single indistinguishable line.
 // Thickness is ours, colour is theirs, and the GTK panel splits it the same way.
 void Panel::buildTable(const PanelSpec &s) {
-    const int ruleH = 2;
+    const int ruleH = m_.rulePx;
 
     QGridLayout *grid = new QGridLayout();
     grid->setContentsMargins(0, 0, 0, 0);
-    grid->setVerticalSpacing(rowGapY);
-    grid->setHorizontalSpacing(colGapX);
+    grid->setVerticalSpacing(m_.rowGapY);
+    grid->setHorizontalSpacing(m_.colGapX);
 
     const int cols = s.cols.size();
     const int span = cols > 0 ? cols : 1;
     for (int i = 0; i < cols; ++i) {
-        grid->addWidget(cell(s.cols[i].caption, s.cols[i].align, theadPt, true), 0, i);
+        grid->addWidget(cell(s.cols[i].caption, s.cols[i].align, m_.theadPt, true), 0, i);
     }
     grid->addWidget(hairline(ruleH), 1, 0, 1, span);
 
     int row = 2;
     for (int i = 0; i < s.days.size(); ++i) {
         if (i > 0) {
-            grid->addWidget(hairline(1), row, 0, 1, span);
+            grid->addWidget(hairline(m_.hairlinePx), row, 0, 1, span);
             ++row;
         }
         const Day &d = s.days[i];
@@ -284,14 +290,14 @@ void Panel::buildTable(const PanelSpec &s) {
                 if (symbolFamily.isEmpty() || d.symbol.isEmpty()) {
                     continue;
                 }
-                QLabel *sym = cell(d.symbol, s.cols[c].align, symbolPt, false);
+                QLabel *sym = cell(d.symbol, s.cols[c].align, m_.symbolPt, false);
                 QFont f(symbolFamily);
-                f.setPointSize(symbolPt);
+                f.setPointSize(m_.symbolPt);
                 sym->setFont(f);
                 grid->addWidget(sym, row, c);
                 continue;
             }
-            grid->addWidget(cell(values[c], s.cols[c].align, cellPt, false), row, c);
+            grid->addWidget(cell(values[c], s.cols[c].align, m_.cellPt, false), row, c);
         }
         ++row;
     }
@@ -412,13 +418,13 @@ void Panel::place(bool haveAt, int x, int y) {
     // monitor geometry: the difference is exactly the desktop panels, and ignoring
     // it puts the forecast underneath them.
     const QRect area = s->availableGeometry();
-    int px = area.left() + panelMargin;
+    int px = area.left() + m_.panelMargin;
     if (p.x() > area.left() + area.width() / 2) {
-        px = area.right() + 1 - sz.width() - panelMargin;
+        px = area.right() + 1 - sz.width() - m_.panelMargin;
     }
-    int py = area.top() + panelMargin;
+    int py = area.top() + m_.panelMargin;
     if (p.y() > area.top() + area.height() / 2) {
-        py = area.bottom() + 1 - sz.height() - panelMargin;
+        py = area.bottom() + 1 - sz.height() - m_.panelMargin;
     }
     move(qMax(px, area.left()), qMax(py, area.top()));
 }
@@ -731,9 +737,23 @@ void nimbus_qt_icon(const void *data, int len) {
     QApplication::setWindowIcon(icon);
 }
 
-void nimbus_qt_forecast_begin(const char *title) {
+void nimbus_qt_forecast_begin(const char *title, int width, int symbol_pt,
+                              int row_gap_y, int col_gap_x, int page_pad,
+                              int page_pad_top, int thead_pt, int cell_pt,
+                              int rule_px, int hairline_px, int panel_margin) {
     spec = PanelSpec();
     spec.title = utf8(title);
+    spec.metrics.width = width;
+    spec.metrics.symbolPt = symbol_pt;
+    spec.metrics.rowGapY = row_gap_y;
+    spec.metrics.colGapX = col_gap_x;
+    spec.metrics.pagePad = page_pad;
+    spec.metrics.pagePadTop = page_pad_top;
+    spec.metrics.theadPt = thead_pt;
+    spec.metrics.cellPt = cell_pt;
+    spec.metrics.rulePx = rule_px;
+    spec.metrics.hairlinePx = hairline_px;
+    spec.metrics.panelMargin = panel_margin;
 }
 
 void nimbus_qt_forecast_header(const char *caption, int align) {

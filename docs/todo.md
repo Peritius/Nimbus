@@ -15,19 +15,6 @@
 
 ### P1 — паритет
 
-- [ ] **Шаг 1. `internal/panelspec` — метрики из одного места.**
-      Сейчас продублированы четыре раза и уже разошлись: `pagePadTop` = 4 в
-      GTK/Qt и 6 в Windows. Файлы: `internal/ui/forecast_linux.go` (константы),
-      `internal/ui/style_linux.go` (те же числа в CSS),
-      `internal/ui/forecast_windows.go` (блок `const`),
-      `qtshim/shim.cpp` (`PanelSpec`/`buildTable`).
-      Сделать пакет с константами (`Width 620`, `PagePad 14`, `PagePadTop 4`,
-      `RowGapY 6`, `ColGapX 18`, `TheadPt 11`, `CellPt 11`, `RulePx 2`,
-      `PanelMargin 12`, `SymbolPt`); GTK собирает CSS через `fmt.Sprintf`,
-      Windows читает напрямую, Qt получает `nimbus_panel_metrics` структурой в
-      `nimbus_qt_forecast_begin`. Критерий: `grep pagePadTop` даёт одно место,
-      высота панели совпадает на Windows и в Fedora VM.
-
 - [ ] **Шаг 2. Позиция панели в Go.**
       `corner`/`clamp`/`inside` живут трижды: GTK (`placePanel`, тест в
       `internal/ui/settings_linux_test.go`), Win32 (`pointerAnchor`,

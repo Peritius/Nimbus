@@ -69,7 +69,7 @@ var (
 	qtTheme    func(int32)
 	qtCanTheme func() int32
 
-	qtPanelBegin  func(string)
+	qtPanelBegin  func(string, int32, int32, int32, int32, int32, int32, int32, int32, int32, int32, int32)
 	qtPanelHeader func(string, int32)
 	qtPanelRow    func(string, string, string, string, string)
 	qtPanelShow   func(uint64, int32, int32, int32, uintptr)

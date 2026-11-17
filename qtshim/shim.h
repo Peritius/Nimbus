@@ -127,11 +127,19 @@ int nimbus_qt_can_theme(void);
 // begin, so an abandoned half-built panel cannot leak into the next one. All four
 // must be called on the Qt thread, which means from inside a nimbus_qt_invoke.
 
-// nimbus_qt_forecast_begin starts a new panel. The title is all it takes, and
-// that is the point: the panel is an ordinary application window - the manager's
-// frame, the desktop theme's colours - that merely stays above the others and off
-// the taskbar, so it has no look for the caller to choose between.
-void nimbus_qt_forecast_begin(const char *title);
+// nimbus_qt_forecast_begin starts a new panel. The title is the window's, and
+// the rest are the layout metrics from internal/panelspec - passed as scalars
+// rather than as a struct for the reason stated at the top of this file: the
+// shim and the Go side have no shared idea of a struct's layout, and a sequence
+// of ints cannot disagree about anything.
+//
+// width, symbol_pt, row_gap_y, col_gap_x, page_pad, page_pad_top, thead_pt,
+// cell_pt, rule_px, hairline_px and panel_margin are exactly the constants of
+// that package, so the three renderers cannot drift apart again.
+void nimbus_qt_forecast_begin(const char *title, int width, int symbol_pt,
+                              int row_gap_y, int col_gap_x, int page_pad,
+                              int page_pad_top, int thead_pt, int cell_pt,
+                              int rule_px, int hairline_px, int panel_margin);
 
 // nimbus_qt_forecast_header adds one column caption. align is NIMBUS_QT_ALIGN_*
 // and governs the whole column, caption and cells alike, so a column reads as one

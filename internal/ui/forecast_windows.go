@@ -76,29 +76,30 @@ import (
 	"github.com/Peritius/Nimbus/internal/fonts"
 	"github.com/Peritius/Nimbus/internal/gui"
 	"github.com/Peritius/Nimbus/internal/i18n"
+	"github.com/Peritius/Nimbus/internal/panelspec"
 	"github.com/Peritius/Nimbus/internal/weather"
 	"github.com/lxn/win"
 )
 
 // Layout, in the same units the GTK side uses: logical pixels at 96 DPI, scaled
-// to the window's real DPI at layout time. The counterpart of each value in
-// forecast_linux.go or style_linux.go is named beside it.
+// to the window's real DPI at layout time. Every number comes from
+// internal/panelspec, which is the one place all three renderers read them from.
 const (
-	panelWidthPt = 620 // forecastWidth
-	panelEdgeGap = 12  // panelMargin: clearance from the work-area edges
-	pagePad      = 14  // .page padding: sides and bottom in the stylesheet
-	// The stylesheet's fourth value, the smaller padding it puts at the top of
-	// the page. layoutTable spends it at the BOTTOM instead and starts the table
-	// pagePad down from the top of the client area, so the split is the mirror of
-	// the stylesheet's - while the panel's height, which is what the shared
-	// metrics are really about, is the same sum.
-	pagePadTop = 6
+	panelWidthPt = panelspec.Width
+	panelEdgeGap = panelspec.PanelMargin
+	pagePad      = panelspec.PagePad
+	// The GTK stylesheet puts the smaller padding at the TOP of the page;
+	// layoutTable spends it at the BOTTOM instead and starts the table pagePad
+	// down from the top of the client area, so the split is the mirror of the
+	// stylesheet's - while the panel's height, which is what the shared metrics
+	// are really about, is the same sum.
+	pagePadTop = panelspec.PagePadTop
 
-	rowGapY = 6  // grid row spacing
-	colGapX = 18 // grid column spacing
+	rowGapY = panelspec.RowGapY
+	colGapX = panelspec.ColGapX
 
-	theadPt = 11 // .thead font-size, weight 600
-	cellPt  = 11 // .cell font-size
+	theadPt = panelspec.TheadPt
+	cellPt  = panelspec.CellPt
 
 	// symbolPt is the size of the weather symbol in layout PIXELS, not in
 	// typographic points - it is the value fonts.Glyph is handed on the GTK
@@ -106,18 +107,19 @@ const (
 	// because these glyphs draw at very close to one em (0.75 to 1.11 in this
 	// typeface, 1.02 on average), so an em of symbolPt puts the ink at about
 	// symbolPt and the two backends agree.
-	symbolPt = 20
+	symbolPt = panelspec.SymbolPt
 
-	// rulePt is the thickness of the header rule and of the hairlines between
-	// data rows: `separator { min-height: 1px }`.
-	rulePt = 1
+	// rulePt is the thickness of the header rule, hairlinePt the thickness of
+	// the separators between data rows.
+	rulePt     = panelspec.RulePx
+	hairlinePt = panelspec.HairlinePx
 
 	// numCols is the width of i18n.ForecastHeaders(). It is a constant rather
 	// than len(headers) because the geometry is an array: a locale that
 	// returned a different number of captions would otherwise index past it.
-	numCols = 5
+	numCols = panelspec.NumCols
 	// colCond is the column drawn in the symbol face instead of the text face.
-	colCond = 1
+	colCond = panelspec.ColCond
 )
 
 // colAlign is the horizontal alignment of each table column, applied to both the
@@ -1366,12 +1368,13 @@ func layoutTable(m panelMetrics, dpi int32, n int) (panelGeom, int32, int32) {
 
 	gap := s(rowGapY)
 	ruleTh := max(1, s(rulePt))
+	hairTh := max(1, s(hairlinePt))
 	rowH := max(m.cellH, m.symbolPx)
 
 	rows := int32(n)
 	tableH := m.theadH + gap + ruleTh + gap + rows*rowH
 	if rows > 1 {
-		tableH += (rows - 1) * (2*gap + ruleTh)
+		tableH += (rows - 1) * (2*gap + hairTh)
 	}
 
 	h := s(pagePadTop) + pad + tableH
@@ -1392,12 +1395,12 @@ func layoutTable(m panelMetrics, dpi int32, n int) (panelGeom, int32, int32) {
 	rowsY := g.rule.Bottom + gap
 	g.rows = make([]rowGeom, n)
 	for r := 0; r < n; r++ {
-		y := rowsY + int32(r)*(rowH+2*gap+ruleTh)
+		y := rowsY + int32(r)*(rowH+2*gap+hairTh)
 		for i := 0; i < numCols; i++ {
 			g.rows[r].cell[i] = win.RECT{Left: colL[i], Top: y, Right: colR[i], Bottom: y + rowH}
 		}
 		if r < n-1 {
-			g.rows[r].sep = rectAt(contentL, y+rowH+gap, cw, ruleTh)
+			g.rows[r].sep = rectAt(contentL, y+rowH+gap, cw, hairTh)
 		}
 	}
 	return g, w, h

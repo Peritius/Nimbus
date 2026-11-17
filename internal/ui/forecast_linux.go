@@ -11,6 +11,7 @@ import (
 	"github.com/Peritius/Nimbus/internal/gtk"
 	"github.com/Peritius/Nimbus/internal/gui"
 	"github.com/Peritius/Nimbus/internal/i18n"
+	"github.com/Peritius/Nimbus/internal/panelspec"
 	"github.com/Peritius/Nimbus/internal/weather"
 )
 
@@ -33,33 +34,17 @@ import (
 // theme - and why the title bar's close button is routed through the panel's own
 // dismissal, so that every exit reports the panel's position alike.
 //
-// Every metric is shared with the Win32 backend value for value - see the
-// constants below and the stylesheet in style_linux.go, whose numbers
-// forecast_windows.go carries as named constants of its own. The point of the
-// two files is that the two platforms look like one product.
+// Every metric is shared with the other two backends through
+// internal/panelspec - see the constants there and the stylesheet in
+// style_linux.go, which interpolates them. The point of the three files is that
+// the three platforms look like one product.
 
 const (
-	forecastWidth = 620
 	// -1 lets the panel hug its content. A fixed height would stretch the table
 	// rows over whatever height was guessed.
 	forecastHeight = -1
 
-	// Weather-symbol size in layout points. Unlike the colour artwork this
-	// replaced, the glyph is rasterised at whatever size is asked for, so a
-	// HiDPI screen simply gets scale times as many pixels rather than the
-	// nearest available asset.
-	symbolPt = 20
-
-	// Grid metrics. These live in Go rather than in the stylesheet because GTK
-	// grid spacing is a widget property, not a style property - CSS cannot set
-	// it. Counterparts in forecast_windows.go: rowGapY, colGapX.
-	rowGapY = 6
-	colGapX = 18
-
 	forecastWindowID = "nimbus-forecast"
-
-	// Clearance from the work-area edges the panel hugs.
-	panelMargin = 12
 )
 
 // placeSettle is how long the panel waits before taking the window's position as
@@ -265,7 +250,7 @@ func buildForecast(data []weather.DailyForecast, req gui.Forecast, l i18n.Lang, 
 	// dismiss - the window manager's, or shutdown's - is recorded too.
 	var closed bool
 
-	win := gtk.NewFramedPanel(l.ForecastTitle(), forecastWidth, forecastHeight)
+	win := gtk.NewFramedPanel(l.ForecastTitle(), panelspec.Width, forecastHeight)
 	win.OnDestroy(func() {
 		closed = true
 		forecastWindow = 0
@@ -452,7 +437,7 @@ func buildForecast(data []weather.DailyForecast, req gui.Forecast, l i18n.Lang, 
 // not wrap: a wrapping label reports a near-zero minimum width, and its column
 // then collapses to nothing the moment the panel is narrower than its content.
 func forecastTable(data []weather.DailyForecast, units, windUnit string, l i18n.Lang, scale int, fg color.NRGBA) uintptr {
-	grid := gtk.NewGrid(rowGapY, colGapX)
+	grid := gtk.NewGrid(panelspec.RowGapY, panelspec.ColGapX)
 	cols := len(colAlign)
 
 	for i, caption := range l.ForecastHeaders() {
@@ -483,7 +468,7 @@ func forecastTable(data []weather.DailyForecast, units, windUnit string, l i18n.
 
 		// A missing glyph leaves the slot empty rather than substituting a
 		// symbol that means something else.
-		if sym := symbolWidget(d.WeatherCode, symbolPt, scale, fg); sym != 0 {
+		if sym := symbolWidget(d.WeatherCode, panelspec.SymbolPt, scale, fg); sym != 0 {
 			gtk.SetHAlign(sym, gtk.AlignCenter)
 			gtk.SetVAlign(sym, gtk.AlignCenter)
 			grid.Attach(sym, 1, row, 1, 1)
@@ -642,13 +627,13 @@ func clampToArea(x, y, w, h int, area gtk.Rect) (int, int) {
 // work area is deliberately not the monitor geometry: the difference is exactly
 // the desktop panels, and ignoring it puts the forecast underneath them.
 func corner(px, py, w, h int, area gtk.Rect) (int, int) {
-	x := area.X + panelMargin
+	x := area.X + panelspec.PanelMargin
 	if px > area.X+area.W/2 {
-		x = area.X + area.W - w - panelMargin
+		x = area.X + area.W - w - panelspec.PanelMargin
 	}
-	y := area.Y + panelMargin
+	y := area.Y + panelspec.PanelMargin
 	if py > area.Y+area.H/2 {
-		y = area.Y + area.H - h - panelMargin
+		y = area.Y + area.H - h - panelspec.PanelMargin
 	}
 	// Clamped to the work area's own origin, which is what forecast_windows.go's
 	// panelCorner does and this did not. A panel wider or taller than the work area

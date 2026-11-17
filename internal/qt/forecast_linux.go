@@ -9,6 +9,7 @@ import (
 	"github.com/Peritius/Nimbus/internal/fonts"
 	"github.com/Peritius/Nimbus/internal/gui"
 	"github.com/Peritius/Nimbus/internal/i18n"
+	"github.com/Peritius/Nimbus/internal/panelspec"
 	"github.com/Peritius/Nimbus/internal/weather"
 )
 
@@ -170,7 +171,10 @@ func buildPanel(data []weather.DailyForecast, req gui.Forecast, l i18n.Lang) {
 		},
 	})
 
-	qtPanelBegin(l.ForecastTitle())
+	qtPanelBegin(l.ForecastTitle(), panelspec.Width, panelspec.SymbolPt,
+		panelspec.RowGapY, panelspec.ColGapX, panelspec.PagePad,
+		panelspec.PagePadTop, panelspec.TheadPt, panelspec.CellPt,
+		panelspec.RulePx, panelspec.HairlinePx, panelspec.PanelMargin)
 
 	for i, caption := range l.ForecastHeaders() {
 		if i >= len(colAlign) {
