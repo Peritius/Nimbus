@@ -38,11 +38,67 @@ jobs:
         run: go vet ./...
       - name: Staticcheck
         run: staticcheck ./...
+      # CGO_ENABLED=0 is what the released binaries are built with, so the tests
+      # run under it too: a test that silently needs cgo would otherwise pass
+      # here and fail a release.
       - name: Test (CGO_ENABLED=0)
         run: CGO_ENABLED=0 go test -v -count=1 ./...
-        env:
-          GOOS: linux
+      # The race detector needs cgo, hence a second run rather than a flag on the
+      # first. internal/tray shares cfg, lastData and lang between the menu
+      # goroutine, the fetch ticker and the toolkit thread; this is the only job
+      # that would notice them being read unsynchronised.
+      - name: Test (race)
+        run: go test -race -count=1 ./...
       - name: Build GTK
         run: CGO_ENABLED=0 go build -ldflags="-s -w" -o /tmp/nimbus-gtk .
-      - name: Build Qt (without shim)
-        run: CGO_ENABLED=0 go build -tags qt -ldflags="-s -w" -o /tmp/nimbus-qt . 2>&1 || echo "Qt shim not available, skipping Qt build"
+
+  # The Qt half is C++ compiled by cgo against Qt headers, so it needs a real
+  # toolchain - and it had none in CI. The step this replaces was
+  # `go build -tags qt ... || echo "skipping"`, which swallowed both a compile
+  # error in qtshim/shim.cpp and a renamed symbol in internal/qt/load_linux.go;
+  # the first place either surfaced was a tagged release.
+  #
+  # ubuntu:22.04 for the same reason the release uses it: it is the oldest image
+  # carrying Qt 6, so the ABI floor measured here is the floor the project
+  # promises, not whatever the hosted runner happens to ship this month.
+  test-linux-qt:
+    runs-on: ubuntu-latest
+    container: ubuntu:22.04
+    steps:
+      - name: Install the toolchain
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update -qq
+          # qt6-base-dev builds the shim and nothing else; objdump, used by the
+          # ABI check below, arrives with g++.
+          apt-get install -y -qq qt6-base-dev g++ make git curl ca-certificates
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+      - name: Build the Qt shim
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          make shim
+      # The 28 entry points are bound by name at runtime. A rename on either side
+      # of the C boundary compiles cleanly on both and fails at dlopen, so vet and
+      # the build below are the cheap half of that check; the real one is loading
+      # the library, which no headless job can do.
+      - name: Vet (qt)
+        run: go vet -tags qt ./...
+      - name: Test (qt)
+        run: CGO_ENABLED=0 go test -tags qt -count=1 ./...
+      - name: Build Qt
+        run: CGO_ENABLED=0 go build -tags qt -ldflags="-s -w" -o /tmp/nimbus-qt .
+      - name: Check the ABI floor
+        run: |
+          # RHEL 9, Rocky 9 and AlmaLinux 9 all ship glibc 2.34; a shim needing
+          # more would still install there and then silently fall back to GTK,
+          # which is the worst possible way to find out.
+          FLOOR=$(objdump -T internal/qt/libnimbusqt.so | grep -oE 'GLIBC_[0-9.]+' | sort -V | tail -1)
+          MAX=GLIBC_2.34
+          echo "the shim needs at most ${FLOOR}; the ceiling is ${MAX}"
+          if [ "$(printf '%s\n%s\n' "$FLOOR" "$MAX" | sort -V | tail -1)" != "$MAX" ]; then
+            echo "::error::the Qt shim now requires ${FLOOR}; glibc 2.34 distributions would fall back to GTK"
+            exit 1
+          fi
